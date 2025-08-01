@@ -1,0 +1,25 @@
+def txt_to_vcf(input_file, output_file):
+    with open(input_file, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+    
+    with open(output_file, 'w', encoding='utf-8') as vcf_file:
+        for line in lines:
+            # Satırı 'ad numara' formatında ayır
+            parts = line.strip().split()
+            if len(parts) == 2:
+                ad, numara = parts
+                vcf_file.write(f"BEGIN:VCARD\n")
+                vcf_file.write(f"VERSION:4.0\n")
+                vcf_file.write(f"PRODID:github/hhk78\n")
+                vcf_file.write(f"FN:{ad}\n")
+                vcf_file.write(f"N:;{ad};;;\n")
+                vcf_file.write(f"TEL;TYPE=:{numara}\n")
+                vcf_file.write(f"END:VCARD\n\n")
+            else:
+                print(f"Satır format hatası: {line.strip()}")
+
+input_file = "input.txt"  
+output_file = "output.vcf"  
+
+txt_to_vcf(input_file, output_file)
+print("VCF dosyası oluşturuldu:", output_file)

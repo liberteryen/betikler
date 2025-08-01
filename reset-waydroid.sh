@@ -1,0 +1,1 @@
+sudo rm -rf /var/lib/waydroid  /home/h/.waydroid /home/h/waydroid /home/h/.share/waydroid /home/h/.local/share/waydroid

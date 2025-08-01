@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# RAM disk oluşturma
+RAM_DISK_DIR=$(mktemp -d -p /dev/shm)
+echo "RAM disk dizini: $RAM_DISK_DIR"
+
+# Kullanıcıdan video URL'sini al
+read -p "YouTube video URL'sini girin: " VIDEO_URL
+
+# Video ve sesin en iyi kalitede indirilmesi
+echo "Video ve ses indiriliyor..."
+yt-dlp -f 'bestvideo+bestaudio' --merge-output-format mp4 -o "$RAM_DISK_DIR/video.mp4" "$VIDEO_URL"
+
+# Kullanıcıdan kırpma istenirse başlama ve bitiş zamanı al
+read -p "Videoyu kırpmak istiyor musunuz? (e/h): " CROP_CHOICE
+
+if [[ "$CROP_CHOICE" =~ ^[eE]$ ]]; then
+  read -p "Başlangıç zamanını girin (Örnek: 00:01:30): " START_TIME
+  read -p "Bitiş zamanını girin (Örnek: 00:05:00): " END_TIME
+  
+  # Video kırpma işlemi
+  echo "Video kırpılıyor..."
+  ffmpeg -i "$RAM_DISK_DIR/video.mp4" -ss "$START_TIME" -to "$END_TIME" -c:v copy -c:a copy "$RAM_DISK_DIR/cut_video.mp4"
+  FINAL_VIDEO="$RAM_DISK_DIR/cut_video.mp4"
+else
+  FINAL_VIDEO="$RAM_DISK_DIR/video.mp4"
+fi
+
+# Kırpılmış video dosyasının son halini kullanıcıya göster
+echo "İşlem tamamlandı. Sonuç dosyası: $FINAL_VIDEO"
+echo "Video işleme bitti, dosya RAM diskinde kaydedildi."
+
+# RAM disk üzerindeki dosya sistemini temizleme
+read -p "İşlem tamamlandıktan sonra RAM diskini temizlemek istiyor musunuz? (e/h): " CLEANUP_CHOICE
+if [[ "$CLEANUP_CHOICE" =~ ^[eE]$ ]]; then
+  rm -rf "$RAM_DISK_DIR"
+  echo "RAM disk temizlendi."
+else
+  echo "RAM disk temizlenmedi. Dosyalar '$RAM_DISK_DIR' dizininde kaldı."
+fi

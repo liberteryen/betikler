@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Değişkenler
+DOMAIN="localhost"
+PORT="3131"
+CERT_DIR="/etc/ssl/selfsigned"
+CERT_KEY="$CERT_DIR/selfsigned.key"
+CERT_CRT="$CERT_DIR/selfsigned.crt"
+CONF_FILE="/etc/apache2/sites-available/selfsigned1.conf"
+ENABLED_LINK="/etc/apache2/sites-enabled/selfsigned1.conf"
+
+# Sertifika dizinini oluştur
+mkdir -p "$CERT_DIR"
+
+# Self-signed sertifikayı oluştur
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout "$CERT_KEY" \
+  -out "$CERT_CRT" \
+  -subj "/C=TR/ST=Istanbul/L=Kadikoy/O=ExampleCompany/OU=IT/CN=$DOMAIN"
+
+# Apache config dosyasını oluştur
+cat <<EOF > "$CONF_FILE"
+<VirtualHost *:$PORT>
+    ServerName $DOMAIN
+
+    SSLEngine on
+    SSLCertificateFile $CERT_CRT
+    SSLCertificateKeyFile $CERT_KEY
+
+    DocumentRoot /var/www/html
+
+    <Directory /var/www/html>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/selfsigned1_error.log
+    CustomLog \${APACHE_LOG_DIR}/selfsigned1_access.log combined
+</VirtualHost>
+EOF
+
+
+
+# SSL modülünü ve siteyi etkinleştir
+a2enmod ssl
+a2ensite selfsigned1
+
+# Apache’yi yeniden başlat
+service apache2 restart
+
+echo "Self-signed HTTPS sunucusu https://$DOMAIN:$PORT üzerinden çalışıyor."

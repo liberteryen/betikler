@@ -1,0 +1,5 @@
+mariadb -u root
+CREATE USER '1'@'%' IDENTIFIED BY '1111';
+GRANT ALL PRIVILEGES ON *.* TO '1'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+apt install php php-apcu php-bcmath php-cli php-common php-curl php-gd php-gmp php-imagick php-intl php-mbstring php-mysql php-zip php-xml

@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Hata durumunda betiği durdur
+set -e
+
+# Paketleri güncelle ve gerekli paketleri kur
+echo "🔄 Gerekli paketler yükleniyor..."
+apt update
+apt install -y nginx php-fpm openssl
+
+# Self-signed SSL sertifikası oluşturuluyor
+SSL_DIR="/etc/nginx/ssl"
+DOMAIN="localhost"
+
+echo "🔐 Self-signed SSL sertifikası oluşturuluyor..."
+mkdir -p $SSL_DIR
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout $SSL_DIR/selfsigned.key \
+  -out $SSL_DIR/selfsigned.crt \
+  -subj "/C=TR/ST=Istanbul/L=Kadikoy/O=LocalDev/CN=$DOMAIN"
+
+# Nginx yapılandırması
+NGINX_CONF="/etc/nginx/sites-available/ssl_site"
+
+echo "🛠️ Nginx yapılandırma dosyası oluşturuluyor..."
+cat > $NGINX_CONF <<EOF
+server {
+    listen 3133 ssl;
+    server_name $DOMAIN;
+
+    ssl_certificate     $SSL_DIR/selfsigned.crt;
+    ssl_certificate_key $SSL_DIR/selfsigned.key;
+
+    root /var/www/html;
+    index index.php index.html index.htm;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+EOF
+
+# Yeni yapılandırmayı etkinleştir
+ln -sf $NGINX_CONF /etc/nginx/sites-enabled/ssl_site
+
+# Varsayılan yapılandırmayı devre dışı bırak
+rm -f /etc/nginx/sites-enabled/default
+
+# Nginx yeniden başlatılıyor
+echo "🔁 Nginx yeniden başlatılıyor..."
+service nginx restart
+service php8.2-fpm start
+echo "✅ Kurulum tamamlandı! HTTPS üzerinden 3133 portunda çalışıyor: https://localhost:3133"

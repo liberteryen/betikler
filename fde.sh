@@ -1,0 +1,1 @@
+sudo cryptsetup luksFormat /dev/DISK --type luks2 --cipher aes-xts-plain64 --key-size 512 --hash sha512 --pbkdf argon2id --pbkdf-memory 1048576 --pbkdf-parallel `nproc --all`
