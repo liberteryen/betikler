@@ -5,7 +5,7 @@ SERVER_URL="http://localhost:8008"
 ACCESS_TOKEN=""
 
 
-TIMESTAMP=$(date +%s%3N)
+TIMESTAMP=$(date -d "+1 day" +%s%3N)
 
 # Tüm odaları çek (yalnızca room_id’leri alıyoruz)
 room_ids=$(curl -s -H "Authorization: Bearer $ACCESS_TOKEN" "$SERVER_URL/_synapse/admin/v1/rooms" \
