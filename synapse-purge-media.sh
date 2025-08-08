@@ -1,6 +1,6 @@
 #!/bin/bash
 
-timestamp=$(date +%s)    # örnek olarak şu anki zaman damgası
+timestamp=$(date -d "+1 day" +%s%3N)
 token="SENIN_TOKENIN_BURAYA"
 
 
